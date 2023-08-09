@@ -137,7 +137,15 @@ class ApiBenchmarkBASE(object):
             jelly.result["backward"] = ACCURACY % backward
             jelly.result["total"] = ACCURACY % total
             jelly.result["best_total"] = ACCURACY % best_total
+
             self._log_save(data=jelly.result, case_name=case_name)
+
+            self._show(
+                forward_time=ACCURACY % forward,
+                backward_time=ACCURACY % backward,
+                total_time=ACCURACY % total,
+                best_total_time=ACCURACY % best_total,
+            )
             error_logo = False
             error_info = ""
 
@@ -151,7 +159,7 @@ class ApiBenchmarkBASE(object):
 
         return error_logo, error_info, api
 
-    def _run_main(self, all_cases, latest_id):
+    def _run_main(self, all_cases):
         """
         对指定case运行测试
         :param all_cases: list of cases
@@ -333,15 +341,34 @@ class ApiBenchmarkBASE(object):
         try:
             with open(log_file, "w") as json_file:
                 json.dump(data, json_file)
-            self.logger.info("[{}] log file save success!".format(case_name))
+            self.logger.get_log().info("[{}] log file save success!".format(case_name))
         except Exception as e:
             print(e)
+
+    def _log_load(self):
+        """
+        保存数据到磁盘
+        :return:
+        """
+        all_case = {}
+        data = dict()
+        for i in os.listdir("./log/"):
+            with open("./log/" + i) as case:
+                res = case.readline()
+                api = i.split(".")[0]
+                data[api] = res
+        for k, v in data.ites():
+            all_case[k] = {}
+            # all_case[k]["jid"] = latest_id
+            all_case[k]["case_name"] = k
+            all_case[k]["api"] = json.loads(v).get("api")
+            all_case[k]["result"] = v
+        return all_case
 
     def _db_save(self, db, latest_id):
         """
         数据库交互
         """
-        # 初始化数据库
         # db = DB(storage=self.storage)
         latest_case = {}
         data = dict()
